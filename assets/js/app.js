@@ -25,8 +25,8 @@
       settings:"ตั้งค่า", thresh:"เกณฑ์ความมั่นใจขั้นต่ำ", interval:"ความถี่ทำนายเรียลไทม์",
       match:"ความมั่นใจ", lowConf:"ความมั่นใจต่ำ — ลองเข้าใกล้/จัดแสงใหม่",
       navScan:"สแกน", navEncy:"คู่มือพันธุ์ไม้",
-      encyTitle:"คู่มือพันธุ์ไม้ป่าชายเลน", encySub:"คุณลักษณะเด่นของแต่ละพันธุ์ที่ระบบจำแนกได้ 5 ชนิด",
-      heroTitle:"ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลน", heroSub:"เปิดกล้องหรือเลือกรูป แล้วให้ AI ระบุพันธุ์ทันที",
+      encyTitle:"คู่มือพันธุ์ไม้", encySub:"คุณลักษณะเด่นของแต่ละพันธุ์ที่ระบบจำแนกได้ 5 ชนิด",
+      heroTitle:"ระบบ AI จำแนกพันธุ์ไม้", heroSub:"เปิดกล้องหรือเลือกรูป แล้วให้ AI ระบุพันธุ์ทันที",
       stSpecies:"พันธุ์", stImgs:"ภาพฝึกสอน", stLang:"ภาษา",
       share:"แชร์ผล", save:"บันทึกรูป", sound:"เสียง + สั่นตอนสแกนสำเร็จ",
       navDash:"แดชบอร์ด", dashTitle:"แดชบอร์ดสถิติการสแกน", dashSub:"สรุปผลการจำแนกที่สแกนสะสมในเครื่องนี้",
@@ -40,8 +40,8 @@
       settings:"Settings", thresh:"Minimum confidence", interval:"Realtime frequency",
       match:"match", lowConf:"Low confidence — move closer / improve lighting",
       navScan:"Scan", navEncy:"Field Guide",
-      encyTitle:"Mangrove Field Guide", encySub:"Key characteristics of the 5 species the model can classify",
-      heroTitle:"AI Mangrove Species Identifier", heroSub:"Open the camera or pick a photo — AI identifies the species instantly",
+      encyTitle:"Plant Field Guide", encySub:"Key characteristics of the 5 species the model can classify",
+      heroTitle:"AI Plant Species Identifier", heroSub:"Open the camera or pick a photo — AI identifies the species instantly",
       stSpecies:"species", stImgs:"train images", stLang:"languages",
       share:"Share", save:"Save image", sound:"Sound + haptics on success",
       navDash:"Dashboard", dashTitle:"Scan Statistics Dashboard", dashSub:"Summary of classifications scanned on this device",
@@ -456,17 +456,17 @@
   $("#saveBtn").onclick = async () => {
     try {
       const blob = await cardToBlob(), a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = "mangrove-result.png"; a.click();
+      a.href = URL.createObjectURL(blob); a.download = "plant-index-result.png"; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     } catch (e) { alert("บันทึกไม่ได้: " + e.message); }
   };
   $("#shareBtn").onclick = async () => {
     try {
-      const blob = await cardToBlob(), file = new File([blob], "mangrove-result.png", { type: "image/png" });
+      const blob = await cardToBlob(), file = new File([blob], "plant-index-result.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "PlantIndex", text: "ผลการจำแนกพันธุ์ไม้ป่าชายเลน" });
+        await navigator.share({ files: [file], title: "Plant Index", text: "ผลการจำแนกพันธุ์ไม้" });
       } else {
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mangrove-result.png"; a.click();
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "plant-index-result.png"; a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       }
     } catch (e) { /* user cancelled */ }

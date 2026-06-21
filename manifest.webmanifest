@@ -1,7 +1,7 @@
 {
-  "name": "PlantIndex — AI Species Scanner",
-  "short_name": "PlantIndex",
-  "description": "ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลนแบบเรียลไทม์",
+  "name": "Plant Index — AI Species Scanner",
+  "short_name": "Plant Index",
+  "description": "ระบบ AI จำแนกพันธุ์ไม้แบบเรียลไทม์",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
