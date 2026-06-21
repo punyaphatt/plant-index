@@ -1,0 +1,22 @@
+{
+  "name": "MangroveID — AI Species Scanner",
+  "short_name": "MangroveID",
+  "description": "ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลนแบบเรียลไทม์",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04110f",
+  "theme_color": "#04110f",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='44' fill='%2304110f'/%3E%3Cpath d='M96 30c18 36 54 48 54 90a54 54 0 1 1-108 0c0-42 36-54 54-90Z' fill='none' stroke='%232fe6a4' stroke-width='8'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='116' fill='%2304110f'/%3E%3Cpath d='M256 80c48 96 144 128 144 240a144 144 0 1 1-288 0c0-112 96-144 144-240Z' fill='none' stroke='%232fe6a4' stroke-width='20'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

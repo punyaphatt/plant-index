@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#04110f" />
+<title>MangroveID · AI Species Scanner</title>
+<meta name="description" content="ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลนแบบเรียลไทม์ — เปิดกล้องหรือเลือกรูปเพื่อระบุพันธุ์ทันที" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Sarabun:wght@300;400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css?v=8" />
+</head>
+<body>
+<!-- splash / boot -->
+<div id="splash" class="splash">
+  <div class="splash-logo" aria-hidden="true">
+    <svg viewBox="0 0 32 32" width="64" height="64"><path d="M16 2c3 6 9 8 9 15a9 9 0 1 1-18 0c0-7 6-9 9-15Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M16 9v17M16 15l5-3M16 19l-5-3M16 23l5-3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+  </div>
+  <div class="splash-title">Mangrove<span>ID</span></div>
+  <div class="splash-bar"><i id="splashBar"></i></div>
+  <div class="splash-status" id="splashStatus">กำลังเริ่มระบบ AI…</div>
+</div>
+
+<!-- animated background layers -->
+<div class="bg-mesh" aria-hidden="true"></div>
+<canvas id="spores" class="bg-spores" aria-hidden="true"></canvas>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="28" height="28"><path d="M16 2c3 6 9 8 9 15a9 9 0 1 1-18 0c0-7 6-9 9-15Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 9v17M16 15l5-3M16 19l-5-3M16 23l5-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    </span>
+    <div class="brand-text">
+      <strong>Mangrove<span>ID</span></strong>
+      <small>AI Species Scanner</small>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <span id="modelBadge" class="badge badge-warn" title="สถานะโมเดล">● กำลังโหลด…</span>
+    <button id="installBtn" class="icon-btn" title="ติดตั้งแอป" hidden>⤓</button>
+    <button id="langBtn" class="icon-btn" title="สลับภาษา">TH</button>
+    <button id="settingsBtn" class="icon-btn" title="ตั้งค่า" aria-label="settings">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 12a7 7 0 0 0-.1-1.1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.9-1.1L16.3 2h-4l-.3 2.6a7 7 0 0 0-1.9 1.1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .7.1 1.1l-2 1.6 2 3.4 2.4-1c.6.5 1.2.8 1.9 1.1l.3 2.6h4l.3-2.6c.7-.3 1.3-.6 1.9-1.1l2.4 1 2-3.4-2-1.6c0-.4.1-.7.1-1.1Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+    </button>
+  </div>
+</header>
+
+<nav class="viewnav">
+  <button id="navScan" class="viewnav-btn is-active">🔍 <span data-i18n="navScan">สแกน</span></button>
+  <button id="navEncy" class="viewnav-btn">📖 <span data-i18n="navEncy">คู่มือพันธุ์ไม้</span></button>
+  <button id="navDash" class="viewnav-btn">📊 <span data-i18n="navDash">แดชบอร์ด</span></button>
+</nav>
+
+<div id="viewScan">
+<section class="hero">
+  <div class="hero-text">
+    <h1 data-i18n="heroTitle">ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลน</h1>
+    <p data-i18n="heroSub">เปิดกล้องหรือเลือกรูป แล้วให้ AI ระบุพันธุ์ทันที</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><b data-count="5">0</b><small data-i18n="stSpecies">พันธุ์</small></div>
+    <div class="stat"><b data-count="500">0</b><small data-i18n="stImgs">ภาพฝึกสอน</small></div>
+    <div class="stat"><b data-count="2">0</b><small data-i18n="stLang">ภาษา</small></div>
+  </div>
+</section>
+
+<main class="layout">
+  <!-- ===== Scanner column ===== -->
+  <section class="scanner glass">
+    <div class="seg" role="tablist">
+      <button id="tabCam"  class="seg-btn is-active" role="tab">📷 <span data-i18n="cam">กล้องสด</span></button>
+      <button id="tabUp"   class="seg-btn" role="tab">🖼️ <span data-i18n="upload">เลือกรูป</span></button>
+    </div>
+
+    <!-- viewport -->
+    <div id="viewport" class="viewport">
+      <video id="video" playsinline muted autoplay></video>
+      <img id="preview" alt="ภาพที่เลือก" hidden />
+      <canvas id="work" hidden></canvas>
+
+      <div class="scanline" aria-hidden="true"></div>
+      <div class="reticle" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+      <!-- live overlay -->
+      <div id="liveTag" class="live-tag" hidden>
+        <span class="dot"></span><b id="liveName">—</b><i id="liveConf">0%</i>
+      </div>
+
+      <!-- empty state for upload -->
+      <div id="dropHint" class="drop-hint" hidden>
+        <svg viewBox="0 0 24 24" width="40" height="40"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p data-i18n="dropHint">ลากรูปมาวาง · กดเลือกจากคลัง · หรือวาง (Ctrl+V)</p>
+      </div>
+
+      <div id="permErr" class="perm-err" hidden>
+        <p data-i18n="permErr">⚠️ เปิดกล้องไม่ได้ — อนุญาตสิทธิ์กล้อง หรือเปิดผ่าน https/localhost แล้วลองใหม่</p>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div class="controls">
+      <div id="camControls" class="ctl-row">
+        <button id="shotBtn" class="btn btn-primary">⦿ <span data-i18n="capture">สแกนภาพนี้</span></button>
+        <button id="liveBtn" class="btn">◷ <span data-i18n="live">เรียลไทม์</span></button>
+        <button id="flipBtn" class="btn btn-ghost" title="สลับกล้อง">⇄</button>
+      </div>
+      <div id="upControls" class="ctl-row" hidden>
+        <button id="pickBtn" class="btn btn-primary">📂 <span data-i18n="pick">เลือกจากคลัง</span></button>
+        <button id="rescanBtn" class="btn" hidden>↻ <span data-i18n="rescan">สแกนใหม่</span></button>
+        <input id="fileInput" type="file" accept="image/*" hidden />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Result column ===== -->
+  <section class="result-col">
+    <article id="resultCard" class="result glass empty">
+      <div class="result-empty">
+        <div class="pulse-ring"></div>
+        <p data-i18n="await">รอผลการสแกน…</p>
+        <small data-i18n="awaitSub">เปิดกล้องหรือเลือกรูปเพื่อระบุพันธุ์</small>
+      </div>
+
+      <div class="result-body" hidden>
+        <div class="result-hero">
+          <img id="rImg" alt="ผลการจำแนก" />
+          <div class="result-hero-grad"></div>
+          <div class="result-title">
+            <h2 id="rName">—</h2>
+            <em id="rSci">—</em>
+          </div>
+          <div class="ring" id="ring">
+            <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle id="ringFg" class="ring-fg" cx="60" cy="60" r="52"/></svg>
+            <div class="ring-label"><b id="rPct">0</b><span>%</span></div>
+          </div>
+        </div>
+
+        <div id="rTags" class="tags"></div>
+        <p id="rDesc" class="desc"></p>
+
+        <div class="breakdown">
+          <h4 data-i18n="breakdown">ความน่าจะเป็นแต่ละพันธุ์</h4>
+          <div id="rBars" class="bars"></div>
+        </div>
+        <div class="result-actions">
+          <button id="shareBtn" class="btn btn-soft">↗ <span data-i18n="share">แชร์ผล</span></button>
+          <button id="saveBtn" class="btn btn-soft">⬇ <span data-i18n="save">บันทึกรูป</span></button>
+        </div>
+      </div>
+    </article>
+
+    <div class="history glass">
+      <div class="history-head"><h4 data-i18n="history">ประวัติการสแกน</h4><button id="clearHist" class="link-btn" data-i18n="clear">ล้าง</button></div>
+      <div id="histList" class="history-list"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- ===== Encyclopedia view ===== -->
+<section id="viewEncy" class="ency" hidden>
+  <div class="ency-head">
+    <h1 data-i18n="encyTitle">คู่มือพันธุ์ไม้ป่าชายเลน</h1>
+    <p data-i18n="encySub">คุณลักษณะเด่นของแต่ละพันธุ์ที่ระบบจำแนกได้ 5 ชนิด</p>
+  </div>
+  <div id="encyGrid" class="ency-grid"></div>
+</section>
+
+<!-- ===== Dashboard view ===== -->
+<section id="viewDash" class="dash" hidden>
+  <div class="ency-head">
+    <h1 data-i18n="dashTitle">แดชบอร์ดสถิติการสแกน</h1>
+    <p data-i18n="dashSub">สรุปผลการจำแนกที่สแกนสะสมในเครื่องนี้</p>
+  </div>
+  <div id="dashEmpty" class="dash-empty"><p data-i18n="dashEmpty">ยังไม่มีข้อมูล — ลองสแกนดูก่อน</p></div>
+  <div id="dashBody" class="dash-body" hidden>
+    <div class="kpi-grid">
+      <div class="kpi glass"><b id="kpiTotal">0</b><small data-i18n="kpiTotal">สแกนทั้งหมด</small></div>
+      <div class="kpi glass"><b id="kpiTop">—</b><small data-i18n="kpiTop">พบบ่อยสุด</small></div>
+      <div class="kpi glass"><b id="kpiAvg">0%</b><small data-i18n="kpiAvg">ความมั่นใจเฉลี่ย</small></div>
+      <div class="kpi glass"><b id="kpiSpecies">0</b><small data-i18n="kpiSpecies">พันธุ์ที่พบ</small></div>
+    </div>
+    <div class="dash-card glass">
+      <div class="history-head"><h4 data-i18n="dashDist">การกระจายตามพันธุ์</h4><button id="dashClear" class="link-btn" data-i18n="clear">ล้าง</button></div>
+      <div id="dashBars" class="dash-bars"></div>
+    </div>
+  </div>
+</section>
+
+<!-- settings drawer -->
+<div id="drawer" class="drawer" hidden>
+  <div class="drawer-panel glass">
+    <div class="drawer-head"><h3 data-i18n="settings">ตั้งค่า</h3><button id="closeDrawer" class="icon-btn">✕</button></div>
+    <label class="field"><span data-i18n="thresh">เกณฑ์ความมั่นใจขั้นต่ำ</span>
+      <input id="thresh" type="range" min="0" max="90" value="40" step="5" /><output id="threshOut">40%</output></label>
+    <label class="field"><span data-i18n="interval">ความถี่ทำนายเรียลไทม์</span>
+      <input id="interval" type="range" min="300" max="2000" value="800" step="100" /><output id="intervalOut">800ms</output></label>
+    <label class="field field-row"><span data-i18n="sound">เสียง + สั่นตอนสแกนสำเร็จ</span>
+      <input id="soundToggle" type="checkbox" checked /></label>
+    <div class="field-note" id="modelNote"></div>
+  </div>
+  <div class="drawer-scrim" id="drawerScrim"></div>
+</div>
+
+<footer class="foot">
+  <span>MangroveID — เว็บสาธิตจำแนกพันธุ์ไม้ป่าชายเลนด้วย AI · YOLOv8-cls · ONNX Runtime Web</span>
+</footer>
+
+<!-- lightbox -->
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-btn lb-close" id="lbClose" aria-label="close">✕</button>
+  <button class="lb-btn lb-prev" id="lbPrev" aria-label="prev">‹</button>
+  <img id="lbImg" alt="" />
+  <button class="lb-btn lb-next" id="lbNext" aria-label="next">›</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="assets/js/species.js?v=7"></script>
+<script src="assets/js/model.js?v=7"></script>
+<script src="assets/js/app.js?v=7"></script>
+</body>
+</html>
