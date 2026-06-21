@@ -1,5 +1,5 @@
-/* MangroveID service worker — network-first (อัปเดตไฟล์ใหม่เสมอเมื่อออนไลน์) */
-const CACHE = "mangroveid-v3";
+/* PlantIndex service worker — network-first (อัปเดตไฟล์ใหม่เสมอเมื่อออนไลน์) */
+const CACHE = "plantindex-v3";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./assets/css/style.css",

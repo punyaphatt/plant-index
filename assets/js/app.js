@@ -464,7 +464,7 @@
     try {
       const blob = await cardToBlob(), file = new File([blob], "mangrove-result.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "MangroveID", text: "ผลการจำแนกพันธุ์ไม้ป่าชายเลน" });
+        await navigator.share({ files: [file], title: "PlantIndex", text: "ผลการจำแนกพันธุ์ไม้ป่าชายเลน" });
       } else {
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mangrove-result.png"; a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);

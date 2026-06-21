@@ -1,6 +1,6 @@
 {
-  "name": "MangroveID — AI Species Scanner",
-  "short_name": "MangroveID",
+  "name": "PlantIndex — AI Species Scanner",
+  "short_name": "PlantIndex",
   "description": "ระบบ AI จำแนกพันธุ์ไม้ป่าชายเลนแบบเรียลไทม์",
   "start_url": "./index.html",
   "display": "standalone",

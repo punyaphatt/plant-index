@@ -1,4 +1,4 @@
-# 🌿 MangroveID — AI Species Scanner (Web)
+# 🌿 PlantIndex — AI Species Scanner (Web)
 
 เว็บแอปจำแนกพันธุ์ไม้ป่าชายเลน 5 ชนิด แบบ **เรียลไทม์ผ่านกล้อง** หรือ **เลือกรูปจากคลัง**
 ดีไซน์ responsive (PC/มือถือ) ธีม *Bioluminescent Mangrove Lab* — รันในเบราว์เซอร์ล้วนด้วย **ONNX Runtime Web** ไม่ต้องมีเซิร์ฟเวอร์
