@@ -3,16 +3,21 @@
    ============================================================ */
 (() => {
   const $ = (s) => document.querySelector(s);
+  const MIN_DETECTION_CONF = 65;
+  const MIN_DETECTION_MARGIN = 0.10;
+  const MIN_PLANT_SCORE = 0.06;
+  const savedThresh = Number(localStorage.getItem("mid_thresh") || MIN_DETECTION_CONF);
   const state = {
     lang: localStorage.getItem("mid_lang") || "th",
     mode: "cam",            // 'cam' | 'up'
     live: false,
     stream: null,
     facing: "environment",
-    thresh: +(localStorage.getItem("mid_thresh") || 40),
+    thresh: Number.isFinite(savedThresh) ? Math.max(MIN_DETECTION_CONF, savedThresh) : MIN_DETECTION_CONF,
     interval: +(localStorage.getItem("mid_interval") || 800),
     liveTimer: null,
-    busy: false
+    busy: false,
+    lastResult: null
   };
 
   /* ---------------- i18n ---------------- */
@@ -24,6 +29,8 @@
       breakdown:"ความน่าจะเป็นแต่ละพันธุ์", history:"ประวัติการสแกน", clear:"ล้าง",
       settings:"ตั้งค่า", thresh:"เกณฑ์ความมั่นใจขั้นต่ำ", interval:"ความถี่ทำนายเรียลไทม์",
       match:"ความมั่นใจ", lowConf:"ความมั่นใจต่ำ — ลองเข้าใกล้/จัดแสงใหม่",
+      noDetect:"ไม่ตรวจพบ", noDetectTag:"ไม่ใช่พืชหรือไม่อยู่ในฐานข้อมูล",
+      noDetectDesc:"ภาพนี้ไม่ตรงกับพันธุ์ไม้ที่ระบบรู้จัก หรือความมั่นใจต่ำเกินไป กรุณาถ่ายให้เห็นส่วนของพืชให้ชัดเจนแล้วลองใหม่",
       navScan:"สแกน", navEncy:"คู่มือพันธุ์ไม้",
       encyTitle:"คู่มือพันธุ์ไม้", encySub:"คุณลักษณะเด่นของแต่ละพันธุ์ที่ระบบจำแนกได้ 5 ชนิด",
       heroTitle:"ระบบ AI จำแนกพันธุ์ไม้", heroSub:"เปิดกล้องหรือเลือกรูป แล้วให้ AI ระบุพันธุ์ทันที",
@@ -39,6 +46,8 @@
       breakdown:"Per-species probability", history:"Scan history", clear:"Clear",
       settings:"Settings", thresh:"Minimum confidence", interval:"Realtime frequency",
       match:"match", lowConf:"Low confidence — move closer / improve lighting",
+      noDetect:"Not detected", noDetectTag:"Not a plant or outside the database",
+      noDetectDesc:"This image does not match the plant species known by the system, or the confidence is too low. Capture a clear plant part and try again.",
       navScan:"Scan", navEncy:"Field Guide",
       encyTitle:"Plant Field Guide", encySub:"Key characteristics of the 5 species the model can classify",
       heroTitle:"AI Plant Species Identifier", heroSub:"Open the camera or pick a photo — AI identifies the species instantly",
@@ -49,6 +58,12 @@
       kpiAvg:"Avg. confidence", kpiSpecies:"Species found", dashDist:"Distribution by species" }
   };
   const t = (k) => (I18N[state.lang][k] ?? k);
+  const isDetected = (res) => {
+    const second = res?.ranked?.[1]?.p ?? 0;
+    const plantScore = res?.plantScore ?? 1;
+    const cutoff = Math.max(state.thresh, MIN_DETECTION_CONF) / 100;
+    return !!res?.top && plantScore >= MIN_PLANT_SCORE && res.top.p >= cutoff && (res.top.p - second) >= MIN_DETECTION_MARGIN;
+  };
   function applyI18n() {
     document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
     $("#langBtn").textContent = state.lang.toUpperCase();
@@ -131,9 +146,10 @@
         state.busy = true;
         try {
           const res = await MangroveModel.predict(video);
-          const info = speciesInfo(res.top.key, state.lang);
-          $("#liveName").textContent = info ? info.name : res.top.key;
-          $("#liveConf").textContent = Math.round(res.top.p * 100) + "%";
+          const detected = isDetected(res);
+          const info = detected ? speciesInfo(res.top.key, state.lang) : null;
+          $("#liveName").textContent = detected ? (info ? info.name : res.top.key) : t("noDetect");
+          $("#liveConf").textContent = detected ? Math.round(res.top.p * 100) + "%" : "";
         } catch (e) { /* ignore */ }
         state.busy = false;
       }
@@ -192,13 +208,19 @@
     const card = $("#resultCard");
     card.querySelector(".result-empty").style.opacity = ".4";
     const res = await MangroveModel.predict(source);
-    renderResult(res);
-    pushHistory(res);
+    const detected = isDetected(res);
+    state.lastResult = res;
+    renderResult(res, detected);
+    if (detected) {
+      pushHistory(res);
+      recordStat(res.top.key, res.top.p);
+    }
   }
 
-  function renderResult(res) {
+  function renderResult(res, detected = isDetected(res)) {
     const card = $("#resultCard");
-    card.classList.remove("empty");
+    card.classList.remove("empty", "no-detect");
+    card.classList.toggle("no-detect", !detected);
     card.querySelector(".result-empty").hidden = true;
     card.querySelector(".result-body").hidden = false;
 
@@ -214,14 +236,28 @@
     const fg = $("#ringFg");
     fg.style.strokeDasharray = C;
     fg.style.strokeDashoffset = C * (1 - res.top.p);
-    fg.style.stroke = pct >= state.thresh ? "var(--emerald)" : "var(--amber)";
+    fg.style.stroke = detected ? "var(--emerald)" : "var(--rose)";
     animateNum($("#rPct"), pct);
+
+    if (!detected) {
+      $("#rName").textContent = t("noDetect");
+      $("#rSci").textContent = "";
+      $("#rTags").innerHTML = [
+        `<span class="tag warn">${esc(t("noDetectTag"))}</span>`,
+        `<span class="tag warn">${esc(t("lowConf"))}</span>`
+      ].join("");
+      $("#rDesc").textContent = t("noDetectDesc");
+      card.querySelector(".breakdown").hidden = true;
+      $("#rBars").innerHTML = "";
+      playDing(false); haptic(15);
+      return;
+    }
+    card.querySelector(".breakdown").hidden = false;
 
     // tags
     const tags = [info.family, info.type, ...info.tags].filter(Boolean);
-    if (pct < state.thresh) tags.push("⚠ " + t("lowConf"));
-    $("#rTags").innerHTML = tags.map((x, i) =>
-      `<span class="tag${i === tags.length - 1 && pct < state.thresh ? " warn" : ""}">${esc(x)}</span>`).join("");
+    $("#rTags").innerHTML = tags.map((x) =>
+      `<span class="tag">${esc(x)}</span>`).join("");
 
     // description
     $("#rDesc").textContent = info.desc;
@@ -237,7 +273,6 @@
 
     // feedback: เสียง + สั่นเบาๆ (ไม่มีเอฟเฟกต์พุ่ง)
     playDing(pct >= 90); haptic(pct >= 90 ? [20, 40, 30] : 25);
-    recordStat(res.top.key, res.top.p);
   }
 
   function animateNum(el, target) {
@@ -288,12 +323,8 @@
     state.lang = state.lang === "th" ? "en" : "th";
     localStorage.setItem("mid_lang", state.lang);
     applyI18n(); renderHist(); renderEncy(); renderDash();
-    if (!$("#resultCard").classList.contains("empty")) {
-      // re-render last result text in new language
-      const last = getHist()[0];
-      if (last) { const info = speciesInfo(last.key, state.lang); if (info) {
-        $("#rName").textContent = info.name; $("#rSci").textContent = info.sci; $("#rDesc").textContent = info.desc;
-      }}
+    if (state.lastResult && !$("#resultCard").classList.contains("empty")) {
+      renderResult(state.lastResult);
     }
   };
 

@@ -1,5 +1,5 @@
 /* Plant Index service worker — network-first (อัปเดตไฟล์ใหม่เสมอเมื่อออนไลน์) */
-const CACHE = "plantindex-v3";
+const CACHE = "plantindex-v4";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest",
   "./assets/css/style.css",

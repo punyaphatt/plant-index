@@ -47,12 +47,19 @@ const MangroveModel = (() => {
 
     const arr = new Float32Array(3 * IMG * IMG);
     const plane = IMG * IMG;
+    let plantPixels = 0;
     for (let i = 0; i < plane; i++) {
-      arr[i]             = data[i * 4]     / 255; // R
-      arr[plane + i]     = data[i * 4 + 1] / 255; // G
-      arr[2 * plane + i] = data[i * 4 + 2] / 255; // B
+      const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+      arr[i]             = r / 255; // R
+      arr[plane + i]     = g / 255; // G
+      arr[2 * plane + i] = b / 255; // B
+
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const saturation = max > 0 ? (max - min) / max : 0;
+      const excessGreen = 2 * g - r - b;
+      if (g > 45 && saturation > 0.12 && excessGreen > 18 && g > r * 1.04 && g > b * 1.04) plantPixels++;
     }
-    return { tensorData: arr, thumb: c.toDataURL("image/jpeg", 0.85) };
+    return { tensorData: arr, thumb: c.toDataURL("image/jpeg", 0.85), plantScore: plantPixels / plane };
   }
 
   function softmax(a) {
@@ -78,7 +85,7 @@ const MangroveModel = (() => {
 
   /* ---- ทำนาย: source = <video>|<img>|<canvas> ---- */
   async function predict(source) {
-    const { tensorData, thumb } = preprocess(source);
+    const { tensorData, thumb, plantScore } = preprocess(source);
     let probs;
     if (demo || !session) {
       probs = demoPredict(tensorData);
@@ -93,7 +100,7 @@ const MangroveModel = (() => {
     const ranked = CLASS_ORDER
       .map((key, i) => ({ key, p: probs[i] ?? 0 }))
       .sort((a, b) => b.p - a.p);
-    return { ranked, top: ranked[0], thumb, demo };
+    return { ranked, top: ranked[0], thumb, demo, plantScore };
   }
 
   return { init, predict, isDemo: () => demo, isReady: () => ready };
